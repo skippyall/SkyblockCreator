@@ -1,16 +1,21 @@
 package io.github.null2264.skyblockcreator.worldgen;
 
+import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.entry.RegistryEntryList;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.random.RandomSeed;
 import net.minecraft.world.ChunkRegion;
 import net.minecraft.world.HeightLimitView;
 import net.minecraft.world.Heightmap;
+import net.minecraft.world.StructureWorldAccess;
 import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.biome.source.BiomeSource;
 import net.minecraft.world.chunk.Chunk;
@@ -18,8 +23,11 @@ import net.minecraft.world.gen.GenerationStep;
 import net.minecraft.world.gen.StructureAccessor;
 import net.minecraft.world.gen.chunk.Blender;
 import net.minecraft.world.gen.chunk.ChunkGenerator;
+import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
 import net.minecraft.world.gen.chunk.VerticalBlockSample;
 import net.minecraft.world.gen.noise.NoiseConfig;
+import net.minecraft.world.gen.structure.Structure;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Random;
@@ -28,7 +36,6 @@ import java.util.concurrent.Executor;
 
 public class StructureChunkGenerator extends ChunkGenerator
 {
-
     public static final Codec<StructureChunkGenerator> CODEC = RecordCodecBuilder.create((instance) -> instance.group(Codec.STRING.stable().fieldOf("dimension").forGetter((generator) -> generator.dimension), BiomeSource.CODEC.fieldOf("biome_source").forGetter((generator) -> generator.biomeSource), Codec.STRING.stable().fieldOf("structure").forGetter((generator) -> generator.structure), BlockPos.CODEC.fieldOf("structureOffset").forGetter((generator) -> generator.structureOffset), BlockPos.CODEC.fieldOf("playerSpawnOffset").forGetter((generator) -> generator.playerSpawnOffset), Identifier.CODEC.optionalFieldOf("fillmentBlock", Identifier.of("minecraft", "air")).stable().forGetter((generator) -> generator.fillmentBlock), Codec.BOOL.optionalFieldOf("enableTopBedrock", false).stable().forGetter((generator) -> generator.enableTopBedrock), Codec.BOOL.optionalFieldOf("enableBottomBedrock", false).stable().forGetter((generator) -> generator.enableBottomBedrock), Codec.BOOL.optionalFieldOf("isBedrockFlat", false).stable().forGetter((generator) -> generator.isBedrockFlat)).apply(instance, instance.stable(StructureChunkGenerator::new)));
     private final String structure;
     private final BlockPos structureOffset;
@@ -78,7 +85,7 @@ public class StructureChunkGenerator extends ChunkGenerator
             int startX = chunk.getPos().getStartX();
             int startZ = chunk.getPos().getStartZ();
 
-            BlockPos.iterate(startX, 0, startZ, startX + 15, getWorldHeight(), startZ + 15).forEach(blockPos -> chunk.setBlockState(blockPos, getFillmentBlock(), false));
+            BlockPos.iterate(startX, getMinimumY(), startZ, startX + 15, getWorldHeight(), startZ + 15).forEach(blockPos -> chunk.setBlockState(blockPos, getFillmentBlock(), false));
         }
         if (enableTopBedrock || enableBottomBedrock) buildBedrock(chunk, new Random(RandomSeed.getSeed()));
     }
@@ -108,7 +115,7 @@ public class StructureChunkGenerator extends ChunkGenerator
         int startX = chunk.getPos().getStartX();
         int startZ = chunk.getPos().getStartZ();
 
-        int bottomBedrockY = 0;
+        int bottomBedrockY = getMinimumY();
         int topBedrockY = this.getWorldHeight() - 1;
 
         boolean shouldGenerateTopBedrock = topBedrockY + 4 >= 0 && topBedrockY < this.getWorldHeight() && this.enableTopBedrock;
@@ -162,5 +169,15 @@ public class StructureChunkGenerator extends ChunkGenerator
 
     @Override
     public void carve(ChunkRegion chunkRegion, long seed, NoiseConfig noiseConfig, BiomeAccess biomeAccess, StructureAccessor structureAccessor, Chunk chunk, GenerationStep.Carver carverStep) {
+    }
+
+    @Override
+    public void generateFeatures(StructureWorldAccess world, Chunk chunk, StructureAccessor structureAccessor) {
+    }
+
+    @Nullable
+    @Override
+    public Pair<BlockPos, RegistryEntry<Structure>> locateStructure(ServerWorld world, RegistryEntryList<Structure> structures, BlockPos center, int radius, boolean skipReferencedStructures) {
+        return null;
     }
 }

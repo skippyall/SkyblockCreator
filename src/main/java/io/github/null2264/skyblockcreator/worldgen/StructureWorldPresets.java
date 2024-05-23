@@ -28,7 +28,7 @@ public class StructureWorldPresets
     public static void register() {
         ResproRegistry.registerData(data -> {
             data.setDumpMode(FabricLoader.getInstance().isDevelopmentEnvironment());
-            data.setPackId(identifierOf("datapack"));
+            data.setPackId(Mod.identifierOf("datapack"));
             data.setPackProfile(profile -> {
                 profile.setAlwaysEnabled(true);
                 profile.setPackName(name -> name.setText("SkyblockCreator Internal Data"));
@@ -40,7 +40,7 @@ public class StructureWorldPresets
             });
             Mod.CONFIG.getStructureWorldConfigs().forEach(config -> {
                 String structure = config.getStructureIdentifier();
-                Identifier worldPresetId = identifierOf(structure);
+                Identifier worldPresetId = Mod.identifierOf(structure);
                 data.setWorldPreset(worldPresetId, worldPreset -> {
                     worldPreset.setDimensions(dim -> {
                         dim.setFromRegistry(DimensionTypes.OVERWORLD);
