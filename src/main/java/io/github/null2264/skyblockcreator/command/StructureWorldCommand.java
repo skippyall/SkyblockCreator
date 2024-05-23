@@ -32,7 +32,7 @@ public class StructureWorldCommand
         } catch (AlreadyHaveIsland e) {
             throw ISLAND_FOR_UUID_ALREADY_EXISTS.create();
         }
-        context.getSource().sendFeedback(Text.translatable("commands.skyblockcreator.created_island", playerEntity.getDisplayName()), false);
+        context.getSource().sendFeedback(() -> Text.translatable("commands.skyblockcreator.created_island", playerEntity.getDisplayName()), false);
         return 1;
     }).then(CommandManager.argument("player", EntityArgumentType.player()).requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(2)).executes(context -> {
         ServerPlayerEntity playerEntity = EntityArgumentType.getPlayer(context, "player");
@@ -44,7 +44,7 @@ public class StructureWorldCommand
         } catch (AlreadyHaveIsland e) {
             throw ISLAND_FOR_UUID_ALREADY_EXISTS.create();
         }
-        context.getSource().sendFeedback(Text.translatable("commands.skyblockcreator.created_island", playerEntity.getDisplayName()), true);
+        context.getSource().sendFeedback(() -> Text.translatable("commands.skyblockcreator.created_island", playerEntity.getDisplayName()), true);
         return 1;
     }));
 
@@ -58,7 +58,7 @@ public class StructureWorldCommand
         } catch (NoIslandFound e) {
             throw NO_ISLAND_FOR_UUID.create();
         }
-        context.getSource().sendFeedback(Text.translatable("commands.skyblockcreator.deleted_island", playerEntity.getDisplayName()), false);
+        context.getSource().sendFeedback(() -> Text.translatable("commands.skyblockcreator.deleted_island", playerEntity.getDisplayName()), false);
         return 1;
     }).then(CommandManager.argument("player", EntityArgumentType.player()).requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(2)).executes(context -> {
         ServerPlayerEntity playerEntity = EntityArgumentType.getPlayer(context, "player");
@@ -70,7 +70,7 @@ public class StructureWorldCommand
         } catch (NoIslandFound e) {
             throw NO_ISLAND_FOR_UUID.create();
         }
-        context.getSource().sendFeedback(Text.translatable("commands.skyblockcreator.deleted_island", playerEntity.getDisplayName()), true);
+        context.getSource().sendFeedback(() -> Text.translatable("commands.skyblockcreator.deleted_island", playerEntity.getDisplayName()), true);
         return 1;
     }));
 
@@ -85,7 +85,7 @@ public class StructureWorldCommand
         } catch (NoIslandFound noIsland) {
             throw NO_ISLAND_FOR_UUID.create();
         }
-        context.getSource().sendFeedback(Text.translatable("commands.skyblockcreator.teleported_to_island", player.getDisplayName()), false);
+        context.getSource().sendFeedback(() -> Text.translatable("commands.skyblockcreator.teleported_to_island", player.getDisplayName()), false);
         return 1;
     }).then(CommandManager.argument("player", EntityArgumentType.player()).requires(serverCommandSource -> serverCommandSource.hasPermissionLevel(2)).executes(context -> {
         StructureWorldState structureWorldState = context.getSource().getWorld().getPersistentStateManager().getOrCreate(StructureWorldState::createFromNbt, StructureWorldState::new, "structureIslands");
@@ -98,7 +98,7 @@ public class StructureWorldCommand
         } catch (NoIslandFound noIsland) {
             throw NO_ISLAND_FOR_UUID.create();
         }
-        context.getSource().sendFeedback(Text.translatable("commands.skyblockcreator.teleported_to_island", player.getDisplayName()), true);
+        context.getSource().sendFeedback(() -> Text.translatable("commands.skyblockcreator.teleported_to_island", player.getDisplayName()), true);
         return 1;
     }));
 

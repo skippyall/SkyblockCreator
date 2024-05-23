@@ -141,7 +141,7 @@ public class StructureWorldState extends PersistentState
                 if (structureTemplateNbt != null && !(uuid.equals(Util.NIL_UUID) && spawnGenerated)) {
                     StructureTemplate structureTemplate = new StructureTemplate();
                     structureTemplate.readNbt(blockLookup, structureTemplateNbt);
-                    structureTemplate.place(world, island.add(structureOffset), island.add(structureOffset), new StructurePlacementData(), world.random, Block.NO_REDRAW);
+                    structureTemplate.place(world, island.add(structureOffset), island.add(structureOffset), new StructurePlacementData(), world.random, Block.NOTIFY_ALL);
                 }
                 playerMap.put(uuid, island.add(playerSpawnOffset));
             } else {
