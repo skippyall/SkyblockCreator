@@ -142,6 +142,9 @@ public abstract class ResproResourcePack<B extends PackResourcesInitializer<?>, 
         return switch (type) {
             case CLIENT_RESOURCES -> assetNamespaces;
             case SERVER_DATA -> dataNamespaces;
+            //Prevent crash with Palladium (adds new ResourceType)
+            //noinspection UnnecessaryDefault
+            default -> new HashSet<>();
         };
     }
 
