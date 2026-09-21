@@ -1,9 +1,9 @@
 package lv.cebbys.mcmods.respro.api.initializer.core;
 
-import net.minecraft.resource.ResourcePackProfile;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
+import net.minecraft.server.packs.repository.Pack;
 
 public interface PackProfileResourceInitializer
 {
@@ -15,7 +15,7 @@ public interface PackProfileResourceInitializer
 
     @NotNull PackProfileResourceInitializer setPackMeta(@NotNull Consumer<MetaResourceInitializer> consumer);
 
-    @NotNull PackProfileResourceInitializer setPackInsertionPosition(@NotNull ResourcePackProfile.InsertionPosition insertionPosition);
+    @NotNull PackProfileResourceInitializer setPackInsertionPosition(@NotNull Pack.Position insertionPosition);
 
     @NotNull PackProfileResourceInitializer setAlwaysEnabled(boolean packAlwaysEnabled);
 

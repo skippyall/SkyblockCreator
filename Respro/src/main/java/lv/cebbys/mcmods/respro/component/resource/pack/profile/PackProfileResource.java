@@ -11,8 +11,8 @@ import lv.cebbys.mcmods.respro.component.resource.core.StringResource;
 import lv.cebbys.mcmods.respro.constant.ResproConstants;
 import lv.cebbys.mcmods.respro.exception.ResourceValidationException;
 import net.minecraft.SharedConstants;
-import net.minecraft.resource.ResourcePackProfile;
-import net.minecraft.resource.ResourceType;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.repository.Pack;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
@@ -24,7 +24,7 @@ public class PackProfileResource extends AbstractResource implements PackProfile
     private final StringResource name;
     private final StringResource source;
     private final MetaResource meta;
-    private ResourcePackProfile.InsertionPosition position;
+    private Pack.Position position;
     private boolean alwaysEnabled;
     private boolean pinned;
 
@@ -33,7 +33,7 @@ public class PackProfileResource extends AbstractResource implements PackProfile
         name = new StringResource();
         source = new StringResource(ResproConstants.PACK_SOURCE_STRING_RESPRO);
         meta = new MetaResource("Respro Generated Pack");
-        position = ResourcePackProfile.InsertionPosition.TOP;
+        position = Pack.Position.TOP;
         alwaysEnabled = false;
         pinned = false;
     }
@@ -92,7 +92,7 @@ public class PackProfileResource extends AbstractResource implements PackProfile
     }
 
     @Override
-    public @NotNull PackProfileResourceInitializer setPackInsertionPosition(@NotNull ResourcePackProfile.InsertionPosition insertionPosition) {
+    public @NotNull PackProfileResourceInitializer setPackInsertionPosition(@NotNull Pack.Position insertionPosition) {
         position = insertionPosition;
         return this;
     }
@@ -115,7 +115,7 @@ public class PackProfileResource extends AbstractResource implements PackProfile
     }
 
     @Override
-    public boolean belongsTo(@NotNull ResourceType type) {
+    public boolean belongsTo(@NotNull PackType type) {
         return true;
     }
 
@@ -131,7 +131,7 @@ public class PackProfileResource extends AbstractResource implements PackProfile
         return meta;
     }
 
-    public ResourcePackProfile.InsertionPosition getPosition() {
+    public Pack.Position getPosition() {
         return position;
     }
 

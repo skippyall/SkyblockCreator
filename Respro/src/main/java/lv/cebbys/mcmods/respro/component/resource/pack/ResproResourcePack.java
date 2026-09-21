@@ -12,11 +12,11 @@ import lv.cebbys.mcmods.respro.component.resource.AbstractResource;
 import lv.cebbys.mcmods.respro.component.resource.core.MetaResource;
 import lv.cebbys.mcmods.respro.component.resource.pack.profile.PackProfileResource;
 import lv.cebbys.mcmods.respro.exception.PackGenerationException;
-import net.minecraft.resource.InputSupplier;
-import net.minecraft.resource.ResourcePack;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.resource.metadata.ResourceMetadataReader;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.metadata.MetadataSectionSerializer;
+import net.minecraft.server.packs.resources.IoSupplier;
 import org.apache.commons.io.input.NullInputStream;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,15 +35,15 @@ import java.util.function.Consumer;
 import static lv.cebbys.mcmods.respro.constant.ResproConstants.PACK_ICON_PATH;
 import static lv.cebbys.mcmods.respro.constant.ResproConstants.PACK_MCMETA_PATH;
 
-public abstract class ResproResourcePack<B extends PackResourcesInitializer<?>, S extends DataProvider> implements ResourcePack
+public abstract class ResproResourcePack<B extends PackResourcesInitializer<?>, S extends DataProvider> implements PackResources
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(Respro.class);
     private static final ResproPackDump DUMP = new ResproPackDump();
 
-    private final Map<Identifier, AbstractResource> resources = new HashMap<>();
+    private final Map<ResourceLocation, AbstractResource> resources = new HashMap<>();
     private final Set<String> assetNamespaces = new HashSet<>();
     private final Set<String> dataNamespaces = new HashSet<>();
-    private Identifier id;
+    private ResourceLocation id;
     private PackProfileResource profile = new PackProfileResource();
     private boolean enabledDumpMode;
 
@@ -56,7 +56,7 @@ public abstract class ResproResourcePack<B extends PackResourcesInitializer<?>, 
         return getInstance();
     }
 
-    public @NotNull B setPackId(@NotNull Identifier packId) {
+    public @NotNull B setPackId(@NotNull ResourceLocation packId) {
         id = packId;
         return getInstance();
     }
@@ -64,23 +64,23 @@ public abstract class ResproResourcePack<B extends PackResourcesInitializer<?>, 
     public @NotNull B setPackProfile(@NotNull Consumer<PackProfileResourceInitializer> consumer) {
         profile = new PackProfileResource();
         consumer.accept(profile);
-        setResource(new Identifier(id.getNamespace(), PACK_ICON_PATH), profile.getIcon());
-        setResource(new Identifier(id.getNamespace(), PACK_MCMETA_PATH), profile.getMeta());
+        setResource(new ResourceLocation(id.getNamespace(), PACK_ICON_PATH), profile.getIcon());
+        setResource(new ResourceLocation(id.getNamespace(), PACK_MCMETA_PATH), profile.getMeta());
         return getInstance();
     }
 
-    public @NotNull B setResource(@NotNull Identifier id, @NotNull AbstractResource resource) {
-        if (resource.belongsTo(ResourceType.CLIENT_RESOURCES)) {
+    public @NotNull B setResource(@NotNull ResourceLocation id, @NotNull AbstractResource resource) {
+        if (resource.belongsTo(PackType.CLIENT_RESOURCES)) {
             assetNamespaces.add(id.getNamespace());
         }
-        if (resource.belongsTo(ResourceType.SERVER_DATA)) {
+        if (resource.belongsTo(PackType.SERVER_DATA)) {
             dataNamespaces.add(id.getNamespace());
         }
         resources.put(id, resource);
         return getInstance();
     }
 
-    public @NotNull <I> B setResource(Class<I> initializerClass, Identifier location, Consumer<I> consumer) {
+    public @NotNull <I> B setResource(Class<I> initializerClass, ResourceLocation location, Consumer<I> consumer) {
         ResourceBuilder<I, ?> builder = ResproBuilders.supplyBuilder(initializerClass);
         if (builder == null) {
             return getInstance();
@@ -90,29 +90,29 @@ public abstract class ResproResourcePack<B extends PackResourcesInitializer<?>, 
         return setResource(location, builder.build());
     }
 
-    public Map<Identifier, AbstractResource> getResources() {
+    public Map<ResourceLocation, AbstractResource> getResources() {
         return resources;
     }
 
     @Override
-    public InputSupplier<InputStream> openRoot(String... pathSegments) {
+    public IoSupplier<InputStream> getRootResource(String... pathSegments) {
         String path = String.join("/", pathSegments);
         if (PACK_MCMETA_PATH.equals(path)) {
-            return () -> resources.get(new Identifier(id.getNamespace(), PACK_MCMETA_PATH)).getAsStream();
+            return () -> resources.get(new ResourceLocation(id.getNamespace(), PACK_MCMETA_PATH)).getAsStream();
         } else if (PACK_ICON_PATH.equals(path)) {
-            return () -> resources.get(new Identifier(id.getNamespace(), PACK_ICON_PATH)).getAsStream();
+            return () -> resources.get(new ResourceLocation(id.getNamespace(), PACK_ICON_PATH)).getAsStream();
         }
         return () -> new NullInputStream(0);
     }
 
     @Override
-    public InputSupplier<InputStream> open(ResourceType type, Identifier id) {
+    public IoSupplier<InputStream> getResource(PackType type, ResourceLocation id) {
         if (hasResource(type, id)) return () -> resources.get(id).getAsStream();
         return null;
     }
 
     @Override
-    public void findResources(ResourceType type, String namespace, String prefix, ResultConsumer visitor) {
+    public void listResources(PackType type, String namespace, String prefix, ResourceOutput visitor) {
         resources.forEach((key, value) -> {
             if (!(key.getPath().startsWith(prefix) && resources.get(key).belongsTo(type))) return;
             visitor.accept(key, value::getAsStream);
@@ -121,24 +121,24 @@ public abstract class ResproResourcePack<B extends PackResourcesInitializer<?>, 
 
     @Nullable
     @Override
-    public <T> T parseMetadata(@NotNull ResourceMetadataReader<T> reader) throws IOException {
-        Identifier metaId = new Identifier(id.getNamespace(), PACK_MCMETA_PATH);
+    public <T> T getMetadataSection(@NotNull MetadataSectionSerializer<T> reader) throws IOException {
+        ResourceLocation metaId = new ResourceLocation(id.getNamespace(), PACK_MCMETA_PATH);
         if (!resources.containsKey(metaId))
             throw new FileNotFoundException("Pack mcmeta was not found for pack: " + id);
         if (resources.get(metaId) instanceof MetaResource metaResource) {
             JsonObject meta = metaResource.getAsJsonObject();
-            return meta.has(reader.getKey()) ? reader.fromJson(meta.getAsJsonObject(reader.getKey())) : null;
+            return meta.has(reader.getMetadataSectionName()) ? reader.fromJson(meta.getAsJsonObject(reader.getMetadataSectionName())) : null;
         } else {
             throw new FileNotFoundException("Invalid metadata for pack: " + id);
         }
     }
 
-    public boolean hasResource(@NotNull ResourceType type, @NotNull Identifier id) {
+    public boolean hasResource(@NotNull PackType type, @NotNull ResourceLocation id) {
         return resources.containsKey(id) && resources.get(id).belongsTo(type);
     }
 
     @Override
-    public Set<String> getNamespaces(@NotNull ResourceType type) {
+    public Set<String> getNamespaces(@NotNull PackType type) {
         return switch (type) {
             case CLIENT_RESOURCES -> assetNamespaces;
             case SERVER_DATA -> dataNamespaces;
@@ -149,7 +149,7 @@ public abstract class ResproResourcePack<B extends PackResourcesInitializer<?>, 
     }
 
     @Override
-    public String getName() {
+    public String packId() {
         return profile.getName().getAsString();
     }
 
@@ -175,7 +175,7 @@ public abstract class ResproResourcePack<B extends PackResourcesInitializer<?>, 
         }
     }
 
-    public Identifier getId() {
+    public ResourceLocation getId() {
         return id;
     }
 

@@ -5,25 +5,23 @@ import lv.cebbys.mcmods.respro.api.ResproRegistry;
 import lv.cebbys.mcmods.respro.constant.ResproConstants;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.biome.source.FixedBiomeSource;
-import net.minecraft.world.biome.source.MultiNoiseBiomeSource;
-import net.minecraft.world.biome.source.MultiNoiseBiomeSourceParameterLists;
-import net.minecraft.world.biome.source.TheEndBiomeSource;
-import net.minecraft.world.dimension.DimensionTypes;
-import net.minecraft.world.gen.WorldPreset;
-import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
-import net.minecraft.world.gen.chunk.NoiseChunkGenerator;
-
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.biome.FixedBiomeSource;
+import net.minecraft.world.level.biome.MultiNoiseBiomeSource;
+import net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists;
+import net.minecraft.world.level.biome.TheEndBiomeSource;
+import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
+import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
+import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
+import net.minecraft.world.level.levelgen.presets.WorldPreset;
 import java.util.ArrayList;
 
 import static io.github.null2264.skyblockcreator.Mod.identifierOf;
 
 public class StructureWorldPresets
 {
-    private static final ArrayList<RegistryKey<WorldPreset>> toBeDisplayed = new ArrayList<>();
+    private static final ArrayList<ResourceKey<WorldPreset>> toBeDisplayed = new ArrayList<>();
 
     public static void register() {
         ResproRegistry.registerData(data -> {
@@ -40,38 +38,38 @@ public class StructureWorldPresets
             });
             Mod.CONFIG.getStructureWorldConfigs().forEach(config -> {
                 String structure = config.getStructureIdentifier();
-                Identifier worldPresetId = Mod.identifierOf(structure);
+                ResourceLocation worldPresetId = Mod.identifierOf(structure);
                 data.setWorldPreset(worldPresetId, worldPreset -> {
                     worldPreset.setDimensions(dim -> {
-                        dim.setFromRegistry(DimensionTypes.OVERWORLD);
+                        dim.setFromRegistry(BuiltinDimensionTypes.OVERWORLD);
                         dim.setChunkGenerator(chunkGenerator -> {
                             chunkGenerator.setFromCodec(StructureChunkGenerator.CODEC);
-                            chunkGenerator.setStructureChunkValues(config.getPlayerSpawnOffset(), config.getStructureOffset(), structure, new Identifier(config.getFillmentBlockIdentifier()), config.isTopBedrockEnabled(), config.isBottomBedrockEnabled(), config.isBedrockFlat());
-                            chunkGenerator.setBiomeSource(biomeSource -> biomeSource.setFromCodec(FixedBiomeSource.CODEC, new Identifier(config.getBiomeIdentifier())));
+                            chunkGenerator.setStructureChunkValues(config.getPlayerSpawnOffset(), config.getStructureOffset(), structure, new ResourceLocation(config.getFillmentBlockIdentifier()), config.isTopBedrockEnabled(), config.isBottomBedrockEnabled(), config.isBedrockFlat());
+                            chunkGenerator.setBiomeSource(biomeSource -> biomeSource.setFromCodec(FixedBiomeSource.CODEC, new ResourceLocation(config.getBiomeIdentifier())));
                         });
                     });
 
                     worldPreset.setDimensions(dim -> {
-                        dim.setFromRegistry(DimensionTypes.THE_NETHER);
+                        dim.setFromRegistry(BuiltinDimensionTypes.NETHER);
                         dim.setChunkGenerator(chunkGenerator -> {
                             if (config.getTheNetherConfig().isVoidMode()) {
                                 chunkGenerator.setFromCodec(StructureChunkGenerator.CODEC);
-                                chunkGenerator.setStructureChunkValues(config.getPlayerSpawnOffset(), config.getStructureOffset(), structure, Identifier.of("minecraft", "air"), config.isTopBedrockEnabled(), config.isBottomBedrockEnabled(), config.isBedrockFlat());
+                                chunkGenerator.setStructureChunkValues(config.getPlayerSpawnOffset(), config.getStructureOffset(), structure, ResourceLocation.tryBuild("minecraft", "air"), config.isTopBedrockEnabled(), config.isBottomBedrockEnabled(), config.isBedrockFlat());
                             } else {
-                                chunkGenerator.setFromCodec(NoiseChunkGenerator.CODEC, ChunkGeneratorSettings.NETHER);
+                                chunkGenerator.setFromCodec(NoiseBasedChunkGenerator.CODEC, NoiseGeneratorSettings.NETHER);
                             }
                             chunkGenerator.setBiomeSource(biomeSource -> biomeSource.setFromCodec(MultiNoiseBiomeSource.CODEC, MultiNoiseBiomeSourceParameterLists.NETHER));
                         });
                     });
 
                     worldPreset.setDimensions(dim -> {
-                        dim.setFromRegistry(DimensionTypes.THE_END);
+                        dim.setFromRegistry(BuiltinDimensionTypes.END);
                         dim.setChunkGenerator(chunkGenerator -> {
                             if (config.getTheEndConfig().isVoidMode()) {
                                 chunkGenerator.setFromCodec(StructureChunkGenerator.CODEC);
-                                chunkGenerator.setStructureChunkValues(config.getPlayerSpawnOffset(), config.getStructureOffset(), structure, Identifier.of("minecraft", "air"), config.isTopBedrockEnabled(), config.isBottomBedrockEnabled(), config.isBedrockFlat());
+                                chunkGenerator.setStructureChunkValues(config.getPlayerSpawnOffset(), config.getStructureOffset(), structure, ResourceLocation.tryBuild("minecraft", "air"), config.isTopBedrockEnabled(), config.isBottomBedrockEnabled(), config.isBedrockFlat());
                             } else {
-                                chunkGenerator.setFromCodec(NoiseChunkGenerator.CODEC, ChunkGeneratorSettings.END);
+                                chunkGenerator.setFromCodec(NoiseBasedChunkGenerator.CODEC, NoiseGeneratorSettings.END);
                             }
                             chunkGenerator.setBiomeSource(biomeSource -> biomeSource.setFromCodec(TheEndBiomeSource.CODEC));
                         });

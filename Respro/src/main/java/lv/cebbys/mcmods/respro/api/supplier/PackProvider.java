@@ -1,20 +1,20 @@
 package lv.cebbys.mcmods.respro.api.supplier;
 
-import net.minecraft.resource.ResourcePackProfile;
-import net.minecraft.resource.ResourcePackProvider;
-import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.repository.Pack;
+import net.minecraft.server.packs.repository.RepositorySource;
 
-public interface PackProvider<T extends ResourcePackProfile> extends ResourcePackProvider
+public interface PackProvider<T extends Pack> extends RepositorySource
 {
-    @NotNull Identifier getId();
+    @NotNull ResourceLocation getId();
 
     @NotNull T getPack();
 
     @Override
-    default void register(Consumer<ResourcePackProfile> profileAdder) {
+    default void loadPacks(Consumer<Pack> profileAdder) {
         profileAdder.accept(getPack());
     }
 }

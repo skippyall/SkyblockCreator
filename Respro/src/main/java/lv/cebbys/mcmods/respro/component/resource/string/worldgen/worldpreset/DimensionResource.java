@@ -5,10 +5,10 @@ import lv.cebbys.mcmods.respro.api.initializer.worldgen.worldpreset.DimensionRes
 import lv.cebbys.mcmods.respro.component.mapper.JsonPart;
 import lv.cebbys.mcmods.respro.component.resource.AbstractJsonObjectResource;
 import lv.cebbys.mcmods.respro.exception.ResourceValidationException;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.world.level.dimension.DimensionType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 public class DimensionResource extends AbstractJsonObjectResource implements DimensionResourceInitializer
 {
     @JsonPart("type")
-    private Identifier type;
+    private ResourceLocation type;
     @JsonPart("generator")
     private ChunkGeneratorResource chunkGenerator;
 
@@ -28,18 +28,18 @@ public class DimensionResource extends AbstractJsonObjectResource implements Dim
     }
 
     @Override
-    public @NotNull DimensionResourceInitializer setFromRegistry(RegistryKey<DimensionType> dimensionType) {
-        this.type = dimensionType.getValue();
+    public @NotNull DimensionResourceInitializer setFromRegistry(ResourceKey<DimensionType> dimensionType) {
+        this.type = dimensionType.location();
         return this;
     }
 
-    public Identifier getDimId() {
+    public ResourceLocation getDimId() {
         return type;
     }
 
     @Override
-    public boolean belongsTo(@NotNull("Provided ResourceType is null") ResourceType type) {
-        return ResourceType.SERVER_DATA.equals(type);
+    public boolean belongsTo(@NotNull("Provided ResourceType is null") PackType type) {
+        return PackType.SERVER_DATA.equals(type);
     }
 
     @Override

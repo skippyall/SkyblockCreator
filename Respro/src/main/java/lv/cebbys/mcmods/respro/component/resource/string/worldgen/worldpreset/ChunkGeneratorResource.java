@@ -6,13 +6,13 @@ import lv.cebbys.mcmods.respro.api.initializer.worldgen.worldpreset.ChunkGenerat
 import lv.cebbys.mcmods.respro.component.mapper.JsonPart;
 import lv.cebbys.mcmods.respro.component.resource.AbstractJsonObjectResource;
 import lv.cebbys.mcmods.respro.exception.ResourceValidationException;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.gen.chunk.ChunkGenerator;
-import net.minecraft.world.gen.chunk.ChunkGeneratorSettings;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -21,11 +21,11 @@ import java.util.function.Consumer;
 public class ChunkGeneratorResource extends AbstractJsonObjectResource implements ChunkGeneratorResourceInitializer
 {
     @JsonPart("type")
-    protected Identifier type;
+    protected ResourceLocation type;
     @JsonPart("biome_source")
     protected BiomeSourceResource biomeSource;
     @JsonPart("settings")
-    protected Identifier settings;
+    protected ResourceLocation settings;
     @JsonPart("dimension")
     protected String dimension;
     @JsonPart("playerSpawnOffset")
@@ -35,7 +35,7 @@ public class ChunkGeneratorResource extends AbstractJsonObjectResource implement
     @JsonPart("structure")
     protected String structure;
     @JsonPart("fillmentBlock")
-    protected Identifier fillmentBlock;
+    protected ResourceLocation fillmentBlock;
     @JsonPart("enableTopBedrock")
     protected Boolean enableTopBedrock = null;
     @JsonPart("enableBottomBedrock")
@@ -67,7 +67,7 @@ public class ChunkGeneratorResource extends AbstractJsonObjectResource implement
         return this;
     }
 
-    public @NotNull ChunkGeneratorResourceInitializer setStructureChunkValues(BlockPos playerSpawnOffset, BlockPos structureOffset, String structure, Identifier fillmentBlock, boolean enableTopBedrock, boolean enableBottomBedrock, boolean isBedrockFlat) {
+    public @NotNull ChunkGeneratorResourceInitializer setStructureChunkValues(BlockPos playerSpawnOffset, BlockPos structureOffset, String structure, ResourceLocation fillmentBlock, boolean enableTopBedrock, boolean enableBottomBedrock, boolean isBedrockFlat) {
         this.playerSpawnOffset = List.of(playerSpawnOffset.getX(), playerSpawnOffset.getY(), playerSpawnOffset.getZ());
         this.structureOffset = List.of(structureOffset.getX(), structureOffset.getY(), structureOffset.getZ());
         this.structure = structure;
@@ -79,18 +79,18 @@ public class ChunkGeneratorResource extends AbstractJsonObjectResource implement
     }
 
     public @NotNull ChunkGeneratorResourceInitializer setFromCodec(Codec<? extends ChunkGenerator> chunkGeneratorCodec) {
-        this.type = Registries.CHUNK_GENERATOR.getKey(chunkGeneratorCodec).orElseThrow().getValue();
+        this.type = BuiltInRegistries.CHUNK_GENERATOR.getResourceKey(chunkGeneratorCodec).orElseThrow().location();
         return this;
     }
 
-    public @NotNull ChunkGeneratorResourceInitializer setFromCodec(Codec<? extends ChunkGenerator> chunkGeneratorCodec, RegistryKey<ChunkGeneratorSettings> settings) {
-        this.settings = settings.getValue();
+    public @NotNull ChunkGeneratorResourceInitializer setFromCodec(Codec<? extends ChunkGenerator> chunkGeneratorCodec, ResourceKey<NoiseGeneratorSettings> settings) {
+        this.settings = settings.location();
         return setFromCodec(chunkGeneratorCodec);
     }
 
     @Override
-    public boolean belongsTo(@NotNull("Provided ResourceType is null") ResourceType type) {
-        return ResourceType.SERVER_DATA.equals(type);
+    public boolean belongsTo(@NotNull("Provided ResourceType is null") PackType type) {
+        return PackType.SERVER_DATA.equals(type);
     }
 
     @Override

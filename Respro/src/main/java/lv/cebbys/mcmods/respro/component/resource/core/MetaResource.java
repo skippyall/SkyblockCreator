@@ -5,7 +5,7 @@ import lv.cebbys.mcmods.respro.component.mapper.JsonPart;
 import lv.cebbys.mcmods.respro.component.resource.AbstractJsonObjectResource;
 import lv.cebbys.mcmods.respro.constant.ResproConstants;
 import lv.cebbys.mcmods.respro.exception.ResourceValidationException;
-import net.minecraft.resource.ResourceType;
+import net.minecraft.server.packs.PackType;
 import org.jetbrains.annotations.NotNull;
 
 public final class MetaResource extends AbstractJsonObjectResource implements MetaResourceInitializer
@@ -42,7 +42,7 @@ public final class MetaResource extends AbstractJsonObjectResource implements Me
     }
 
     @Override
-    public boolean belongsTo(@NotNull ResourceType type) {
+    public boolean belongsTo(@NotNull PackType type) {
         return true;
     }
 

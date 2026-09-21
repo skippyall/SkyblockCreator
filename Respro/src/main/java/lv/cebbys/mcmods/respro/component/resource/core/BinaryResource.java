@@ -2,7 +2,7 @@ package lv.cebbys.mcmods.respro.component.resource.core;
 
 import lv.cebbys.mcmods.respro.component.resource.AbstractResource;
 import lv.cebbys.mcmods.respro.exception.ResourceValidationException;
-import net.minecraft.resource.ResourceType;
+import net.minecraft.server.packs.PackType;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayInputStream;
@@ -18,7 +18,7 @@ public class BinaryResource extends AbstractResource
         return new ByteArrayInputStream(content);
     }
 
-    public boolean belongsTo(@NotNull ResourceType type) {
+    public boolean belongsTo(@NotNull PackType type) {
         return true;
     }
 

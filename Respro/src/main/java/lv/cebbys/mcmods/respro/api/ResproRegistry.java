@@ -4,8 +4,7 @@ import lv.cebbys.mcmods.respro.api.initializer.pack.DataResourcesInitializer;
 import lv.cebbys.mcmods.respro.api.supplier.DataProvider;
 import lv.cebbys.mcmods.respro.component.core.PackProviders;
 import lv.cebbys.mcmods.respro.component.resource.pack.ResproDataPack;
-import net.minecraft.registry.Registry;
-
+import net.minecraft.core.Registry;
 import java.util.function.Consumer;
 
 import static lv.cebbys.mcmods.respro.Respro.LOGGER;

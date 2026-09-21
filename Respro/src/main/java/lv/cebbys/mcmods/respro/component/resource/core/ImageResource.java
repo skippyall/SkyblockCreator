@@ -3,7 +3,7 @@ package lv.cebbys.mcmods.respro.component.resource.core;
 import lv.cebbys.mcmods.respro.api.initializer.core.ImageResourceInitializer;
 import lv.cebbys.mcmods.respro.component.resource.AbstractResource;
 import lv.cebbys.mcmods.respro.exception.ResourceValidationException;
-import net.minecraft.resource.ResourceType;
+import net.minecraft.server.packs.PackType;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayInputStream;
@@ -27,8 +27,8 @@ public class ImageResource extends AbstractResource implements ImageResourceInit
     }
 
     @Override
-    public boolean belongsTo(@NotNull ResourceType type) {
-        return type.equals(ResourceType.CLIENT_RESOURCES);
+    public boolean belongsTo(@NotNull PackType type) {
+        return type.equals(PackType.CLIENT_RESOURCES);
     }
 
     @Override

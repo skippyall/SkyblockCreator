@@ -5,8 +5,8 @@ import lv.cebbys.mcmods.respro.Respro;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.resource.DefaultClientResourcePackProvider;
-import net.minecraft.resource.ResourcePackManager;
+import net.minecraft.client.resources.ClientPackSource;
+import net.minecraft.server.packs.repository.PackRepository;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +18,7 @@ import java.util.Arrays;
 
 import static lv.cebbys.mcmods.respro.component.core.PackProviders.RESPRO_DATA_PROVIDER;
 
-@Mixin(ResourcePackManager.class)
+@Mixin(PackRepository.class)
 public abstract class ResourcePackManagerMixin
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(Respro.class);
@@ -38,7 +38,7 @@ public abstract class ResourcePackManagerMixin
 
     @Environment(EnvType.CLIENT)
     private <E> boolean isForClient(E[] elements) {
-        return Arrays.stream(elements).anyMatch(element -> element instanceof DefaultClientResourcePackProvider);
+        return Arrays.stream(elements).anyMatch(element -> element instanceof ClientPackSource);
     }
 
     private <E> ImmutableSet<Object> appendDataProfileSupplier(E[] elements) {

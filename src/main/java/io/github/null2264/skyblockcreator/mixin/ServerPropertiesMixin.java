@@ -9,14 +9,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(targets = {"net.minecraft.server.dedicated.ServerPropertiesHandler$WorldGenProperties"})
+@Mixin(targets = {"net.minecraft.server.dedicated.DedicatedServerProperties$WorldDimensionData"})
 public abstract class ServerPropertiesMixin
 {
     @Shadow
     @Final
     private String levelType;
 
-    @Redirect(method = "createDimensionsRegistryHolder(Lnet/minecraft/registry/DynamicRegistryManager;)Lnet/minecraft/world/dimension/DimensionOptionsRegistryHolder;", at = @At(value = "FIELD", target = "Lnet/minecraft/server/dedicated/ServerPropertiesHandler$WorldGenProperties;levelType:Ljava/lang/String;", opcode = Opcodes.GETFIELD))
+    @Redirect(method = "create(Lnet/minecraft/core/RegistryAccess;)Lnet/minecraft/world/level/levelgen/WorldDimensions;", at = @At(value = "FIELD", target = "Lnet/minecraft/server/dedicated/DedicatedServerProperties$WorldDimensionData;levelType:Ljava/lang/String;", opcode = Opcodes.GETFIELD))
     public String handleLevelType(@Coerce Object instance) {
         String currentType = levelType;
         if (currentType.equals("default") && Mod.OVERRIDED_LEVEL_TYPE != null) {

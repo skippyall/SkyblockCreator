@@ -4,7 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import lv.cebbys.mcmods.respro.Respro;
 import lv.cebbys.mcmods.respro.component.resource.AbstractJsonObjectResource;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +73,7 @@ public class ResourceParser
                     json.add(path, map);
                 } else if (data instanceof AbstractJsonObjectResource s) {
                     json.add(path, parse(s));
-                } else if (data instanceof Identifier id) {
+                } else if (data instanceof ResourceLocation id) {
                     json.addProperty(path, id.toString());
                 } else if (data instanceof JsonObject j) {
                     json.add(path, j);
@@ -114,7 +114,7 @@ public class ResourceParser
                     array.add(map);
                 } else if (element instanceof AbstractJsonObjectResource s) {
                     array.add(parse(s));
-                } else if (element instanceof Identifier id) {
+                } else if (element instanceof ResourceLocation id) {
                     array.add(id.toString());
                 } else if (element instanceof JsonObject j) {
                     array.add(j);

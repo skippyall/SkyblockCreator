@@ -7,7 +7,7 @@ import lv.cebbys.mcmods.respro.api.pack.Data;
 import lv.cebbys.mcmods.respro.api.supplier.DataProvider;
 import lv.cebbys.mcmods.respro.component.supplier.SimpleDataProvider;
 import lv.cebbys.mcmods.respro.utility.IdentifierUtils;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -27,13 +27,13 @@ public class ResproDataPack extends ResproResourcePack<ResproDataPack, DataProvi
     }
 
     @Override
-    public @NotNull("DataResourcesInitializer is null") DataResourcesInitializer setWorldPreset(@NotNull("Identifier provided was null") Identifier id, @NotNull("WorldPresetResourceInitializer consumer was null") Consumer<WorldPresetResourceInitializer> consumer) {
+    public @NotNull("DataResourcesInitializer is null") DataResourcesInitializer setWorldPreset(@NotNull("Identifier provided was null") ResourceLocation id, @NotNull("WorldPresetResourceInitializer consumer was null") Consumer<WorldPresetResourceInitializer> consumer) {
         return setResource(WorldPresetResourceInitializer.class, IdentifierUtils.wrapped("worldgen/world_preset/", id, ".json"), consumer);
     }
 
     @Override
     public @NotNull("DataResourcesInitializer is null") DataResourcesInitializer setWorldPresetsTag(@NotNull("WorldPresetsResourceInitializer consumer was null") Consumer<WorldPresetsResourceInitializer> consumer) {
-        return setResource(WorldPresetsResourceInitializer.class, IdentifierUtils.wrapped("tags/worldgen/world_preset/", Objects.requireNonNull(Identifier.of("minecraft", "normal")), ".json"), consumer);
+        return setResource(WorldPresetsResourceInitializer.class, IdentifierUtils.wrapped("tags/worldgen/world_preset/", Objects.requireNonNull(ResourceLocation.tryBuild("minecraft", "normal")), ".json"), consumer);
     }
 
     @Override

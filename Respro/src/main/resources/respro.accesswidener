@@ -1,3 +1,3 @@
 accessWidener v2 named
 
-extendable method net/minecraft/resource/ResourcePackProfile <init> (Ljava/lang/String;ZLnet/minecraft/resource/ResourcePackProfile$PackFactory;Lnet/minecraft/text/Text;Lnet/minecraft/resource/ResourcePackProfile$Metadata;Lnet/minecraft/resource/ResourcePackCompatibility;Lnet/minecraft/resource/ResourcePackProfile$InsertionPosition;ZLnet/minecraft/resource/ResourcePackSource;)V
+extendable method net/minecraft/server/packs/repository/Pack <init> (Ljava/lang/String;ZLnet/minecraft/server/packs/repository/Pack$ResourcesSupplier;Lnet/minecraft/network/chat/Component;Lnet/minecraft/server/packs/repository/Pack$Info;Lnet/minecraft/server/packs/repository/PackCompatibility;Lnet/minecraft/server/packs/repository/Pack$Position;ZLnet/minecraft/server/packs/repository/PackSource;)V

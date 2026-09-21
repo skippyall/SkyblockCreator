@@ -5,23 +5,22 @@ import io.github.null2264.skyblockcreator.error.AlreadyHaveIsland;
 import io.github.null2264.skyblockcreator.error.InvalidChunkGenerator;
 import io.github.null2264.skyblockcreator.error.NoIslandFound;
 import io.github.null2264.skyblockcreator.worldgen.StructureChunkGenerator;
-import net.minecraft.block.Block;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.RegistryEntryLookup;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.structure.StructurePlacementData;
-import net.minecraft.structure.StructureTemplate;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.gen.chunk.ChunkGenerator;
-
 import java.util.HashMap;
 import java.util.UUID;
+import net.minecraft.Util;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderGetter;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.level.saveddata.SavedData;
 
-public class StructureWorldState extends PersistentState
+public class StructureWorldState extends SavedData
 {
 
     private final HashMap<UUID, BlockPos> playerMap = new HashMap<>();
@@ -36,14 +35,14 @@ public class StructureWorldState extends PersistentState
         this.spawnGenerated = false;
     }
 
-    public static StructureWorldState createFromNbt(NbtCompound tag) {
+    public static StructureWorldState createFromNbt(CompoundTag tag) {
         StructureWorldState state = new StructureWorldState();
         state.playerMap.clear();
-        NbtCompound playerMapTag = tag.getCompound("playerMap");
-        playerMapTag.getKeys().forEach(key -> {
+        CompoundTag playerMapTag = tag.getCompound("playerMap");
+        playerMapTag.getAllKeys().forEach(key -> {
             try {
                 UUID uuid = UUID.fromString(key);
-                BlockPos pos = BlockPos.fromLong(playerMapTag.getLong(key));
+                BlockPos pos = BlockPos.of(playerMapTag.getLong(key));
                 state.playerMap.put(uuid, pos);
             } catch (IllegalArgumentException ignored) {
             }
@@ -56,11 +55,11 @@ public class StructureWorldState extends PersistentState
         return state;
     }
 
-    public static boolean isNotStructureWorld(ServerWorld world) {
-        return !(world.getChunkManager().getChunkGenerator() instanceof StructureChunkGenerator);
+    public static boolean isNotStructureWorld(ServerLevel world) {
+        return !(world.getChunkSource().getGenerator() instanceof StructureChunkGenerator);
     }
 
-    public void createIsland(ServerWorld world, ServerPlayerEntity playerEntity) throws InvalidChunkGenerator, AlreadyHaveIsland {
+    public void createIsland(ServerLevel world, ServerPlayer playerEntity) throws InvalidChunkGenerator, AlreadyHaveIsland {
         if (isNotStructureWorld(world)) {
             throw new InvalidChunkGenerator();
         }
@@ -69,14 +68,14 @@ public class StructureWorldState extends PersistentState
             throw new AlreadyHaveIsland();
         }
         islandPos = this.generateIsland(world, playerEntity);
-        playerEntity.teleport(islandPos.getX(), islandPos.getY(), islandPos.getZ());
+        playerEntity.teleportToWithTicket(islandPos.getX(), islandPos.getY(), islandPos.getZ());
     }
 
-    public void deleteIsland(ServerPlayerEntity playerEntity) {
-        playerMap.remove(playerEntity.getUuid());
+    public void deleteIsland(ServerPlayer playerEntity) {
+        playerMap.remove(playerEntity.getUUID());
     }
 
-    public void deleteIsland(ServerWorld world, ServerPlayerEntity playerEntity) throws InvalidChunkGenerator, NoIslandFound {
+    public void deleteIsland(ServerLevel world, ServerPlayer playerEntity) throws InvalidChunkGenerator, NoIslandFound {
         if (isNotStructureWorld(world)) {
             throw new InvalidChunkGenerator();
         }
@@ -92,34 +91,34 @@ public class StructureWorldState extends PersistentState
         return getIsland(Util.NIL_UUID);
     }
 
-    public BlockPos getIsland(ServerPlayerEntity playerEntity) {
-        return getIsland(playerEntity.getUuid());
+    public BlockPos getIsland(ServerPlayer playerEntity) {
+        return getIsland(playerEntity.getUUID());
     }
 
     public BlockPos getIsland(UUID id) {
         return playerMap.get(id);
     }
 
-    public BlockPos generateIsland(ServerWorld world) {
+    public BlockPos generateIsland(ServerLevel world) {
         BlockPos islandPos = generateIsland(world, Util.NIL_UUID);
         this.spawnGenerated = true;
         return islandPos;
     }
 
-    public BlockPos generateIsland(ServerWorld world, ServerPlayerEntity playerEntity) {
-        return generateIsland(world, playerEntity.getUuid());
+    public BlockPos generateIsland(ServerLevel world, ServerPlayer playerEntity) {
+        return generateIsland(world, playerEntity.getUUID());
     }
 
-    public BlockPos generateIsland(ServerWorld world, UUID uuid) {
+    public BlockPos generateIsland(ServerLevel world, UUID uuid) {
         int x = this.x;
         int y = this.y;
         int dx = this.dx;
         int dy = this.dy;
         if (!playerMap.containsKey(uuid)) {
-            ChunkGenerator chunkGenerator = world.getChunkManager().getChunkGenerator();
+            ChunkGenerator chunkGenerator = world.getChunkSource().getGenerator();
             if (chunkGenerator instanceof StructureChunkGenerator structureChunkGenerator) {
-                RegistryEntryLookup<Block> blockLookup = world.getRegistryManager().get(RegistryKeys.BLOCK).getReadOnlyWrapper();
-                NbtCompound structureTemplateNbt = Mod.STRUCTURES.get(structureChunkGenerator.getStructure());
+                HolderGetter<Block> blockLookup = world.registryAccess().registryOrThrow(Registries.BLOCK).asLookup();
+                CompoundTag structureTemplateNbt = Mod.STRUCTURES.get(structureChunkGenerator.getStructure());
                 BlockPos playerSpawnOffset = structureChunkGenerator.getPlayerSpawnOffset();
                 BlockPos structureOffset = structureChunkGenerator.getStructureOffset();
 
@@ -127,7 +126,7 @@ public class StructureWorldState extends PersistentState
                 BlockPos island;
 
                 if (!uuid.equals(Util.NIL_UUID)) {
-                    island = origin.add(this.x, 0, this.y);
+                    island = origin.offset(this.x, 0, this.y);
                     if ((x == y) || (x < 0 && x == -y) || (x > 0 && x == Mod.CONFIG.getPlatformDistanceRadius() - y)) {
                         this.dx = -dy;
                         this.dy = dx;
@@ -140,31 +139,31 @@ public class StructureWorldState extends PersistentState
 
                 if (structureTemplateNbt != null && !(uuid.equals(Util.NIL_UUID) && spawnGenerated)) {
                     StructureTemplate structureTemplate = new StructureTemplate();
-                    structureTemplate.readNbt(blockLookup, structureTemplateNbt);
-                    structureTemplate.place(world, island.add(structureOffset), island.add(structureOffset), new StructurePlacementData(), world.random, Block.NOTIFY_ALL);
+                    structureTemplate.load(blockLookup, structureTemplateNbt);
+                    structureTemplate.placeInWorld(world, island.offset(structureOffset), island.offset(structureOffset), new StructurePlaceSettings(), world.random, Block.UPDATE_ALL);
                 }
-                playerMap.put(uuid, island.add(playerSpawnOffset));
+                playerMap.put(uuid, island.offset(playerSpawnOffset));
             } else {
-                playerMap.put(uuid, BlockPos.ORIGIN);
+                playerMap.put(uuid, BlockPos.ZERO);
             }
-            markDirty();
+            setDirty();
         }
         return playerMap.get(uuid);
     }
 
-    public void teleportToIsland(ServerWorld world, ServerPlayerEntity player) throws InvalidChunkGenerator, NoIslandFound {
+    public void teleportToIsland(ServerLevel world, ServerPlayer player) throws InvalidChunkGenerator, NoIslandFound {
         teleportToIsland(world, player, player);
     }
 
-    public void teleportToIsland(ServerWorld world, ServerPlayerEntity player, ServerPlayerEntity owner) throws InvalidChunkGenerator, NoIslandFound {
-        teleportToIsland(world, player, owner.getUuid());
+    public void teleportToIsland(ServerLevel world, ServerPlayer player, ServerPlayer owner) throws InvalidChunkGenerator, NoIslandFound {
+        teleportToIsland(world, player, owner.getUUID());
     }
 
-    public void teleportToIsland(ServerWorld world, ServerPlayerEntity player, UUID uuid) throws InvalidChunkGenerator, NoIslandFound {
+    public void teleportToIsland(ServerLevel world, ServerPlayer player, UUID uuid) throws InvalidChunkGenerator, NoIslandFound {
         teleportToIsland(world, player, uuid, false);
     }
 
-    public void teleportToIsland(ServerWorld world, ServerPlayerEntity player, UUID uuid, Boolean forceTeleport) throws InvalidChunkGenerator, NoIslandFound {
+    public void teleportToIsland(ServerLevel world, ServerPlayer player, UUID uuid, Boolean forceTeleport) throws InvalidChunkGenerator, NoIslandFound {
         if (isNotStructureWorld(world) && !uuid.equals(Util.NIL_UUID)) {
             throw new InvalidChunkGenerator();
         }
@@ -177,13 +176,13 @@ public class StructureWorldState extends PersistentState
             }
         }
 
-        if (forceTeleport) player.setPosition(islandPos.getX(), islandPos.getY(), islandPos.getZ());
-        else player.teleport(islandPos.getX(), islandPos.getY(), islandPos.getZ());
+        if (forceTeleport) player.setPos(islandPos.getX(), islandPos.getY(), islandPos.getZ());
+        else player.teleportToWithTicket(islandPos.getX(), islandPos.getY(), islandPos.getZ());
     }
 
     @Override
-    public NbtCompound writeNbt(NbtCompound tag) {
-        NbtCompound playerMapTag = new NbtCompound();
+    public CompoundTag save(CompoundTag tag) {
+        CompoundTag playerMapTag = new CompoundTag();
         playerMap.forEach((uuid, blockPos) -> playerMapTag.putLong(uuid.toString(), blockPos.asLong()));
         tag.put("playerMap", playerMapTag);
         tag.putInt("x", x);

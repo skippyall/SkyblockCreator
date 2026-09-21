@@ -1,9 +1,9 @@
 package lv.cebbys.mcmods.respro.api.initializer.worldgen;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 public interface WorldPresetsResourceInitializer
 {
-    @NotNull WorldPresetsResourceInitializer addWorldPreset(Identifier worldPresetId);
+    @NotNull WorldPresetsResourceInitializer addWorldPreset(ResourceLocation worldPresetId);
 }

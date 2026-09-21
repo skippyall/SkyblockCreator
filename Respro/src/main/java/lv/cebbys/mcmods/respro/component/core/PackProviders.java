@@ -6,10 +6,10 @@ import lv.cebbys.mcmods.respro.api.pack.Data;
 import lv.cebbys.mcmods.respro.api.supplier.DataListProvider;
 import lv.cebbys.mcmods.respro.api.supplier.DataProvider;
 import lv.cebbys.mcmods.respro.api.supplier.PackListProvider;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.SimpleRegistry;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.MappedRegistry;
+import net.minecraft.core.Registry;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -22,13 +22,13 @@ public class PackProviders
     public static final PackListProvider<Data> RESPRO_DATA_PROVIDER;
 
     static {
-        DATA_PROFILE_PROVIDER = new SimpleRegistry<>(RegistryKey.ofRegistry(new Identifier(Respro.MODID, "data_profile_suppliers")), Lifecycle.stable(), false);
+        DATA_PROFILE_PROVIDER = new MappedRegistry<>(ResourceKey.createRegistryKey(new ResourceLocation(Respro.MODID, "data_profile_suppliers")), Lifecycle.stable(), false);
         RESPRO_DATA_PROVIDER = new DataListProvider()
         {
-            private final Identifier id = new Identifier(RESPRO, "respro_data_supplier");
+            private final ResourceLocation id = new ResourceLocation(RESPRO, "respro_data_supplier");
 
             @Override
-            public @NotNull Identifier getId() {
+            public @NotNull ResourceLocation getId() {
                 return id;
             }
 

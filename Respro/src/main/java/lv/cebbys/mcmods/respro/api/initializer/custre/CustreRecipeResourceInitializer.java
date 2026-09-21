@@ -1,11 +1,11 @@
 package lv.cebbys.mcmods.respro.api.initializer.custre;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 public interface CustreRecipeResourceInitializer
 {
-    @NotNull CustreRecipeResourceInitializer setIngredient(@NotNull Identifier input);
+    @NotNull CustreRecipeResourceInitializer setIngredient(@NotNull ResourceLocation input);
 
-    @NotNull CustreRecipeResourceInitializer setResult(@NotNull Identifier output);
+    @NotNull CustreRecipeResourceInitializer setResult(@NotNull ResourceLocation output);
 }

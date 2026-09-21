@@ -11,14 +11,14 @@ import io.github.null2264.skyblockcreator.worldgen.StructureWorldPresets;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.gen.WorldPreset;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.levelgen.presets.WorldPreset;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,24 +36,24 @@ public class Mod implements ModInitializer
 
     public static final String MOD_ID = "skyblockcreator";
     public static final Logger LOGGER = LogManager.getLogger("Structure World");
-    public static final HashMap<String, NbtCompound> STRUCTURES = Maps.newHashMap();
+    public static final HashMap<String, CompoundTag> STRUCTURES = Maps.newHashMap();
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     public static ModConfig CONFIG;
-    public static List<RegistryKey<WorldPreset>> TO_BE_DISPLAYED = List.of();
+    public static List<ResourceKey<WorldPreset>> TO_BE_DISPLAYED = List.of();
     public static String OVERRIDED_LEVEL_TYPE = null;
     public static Path configPath = Path.of(FabricLoader.getInstance().getConfigDir() + File.separator + MOD_ID);
 
-    public static Identifier identifierOf(String path) {
-        return new Identifier(MOD_ID, path);
+    public static ResourceLocation identifierOf(String path) {
+        return new ResourceLocation(MOD_ID, path);
     }
 
-    public static RegistryKey<WorldPreset> registryKeyOf(String id) {
-        return RegistryKey.of(RegistryKeys.WORLD_PRESET, identifierOf(id));
+    public static ResourceKey<WorldPreset> registryKeyOf(String id) {
+        return ResourceKey.create(Registries.WORLD_PRESET, identifierOf(id));
     }
 
     @Override
     public void onInitialize() {
-        Registry.register(Registries.CHUNK_GENERATOR, identifierOf("structure_chunk_generator"), StructureChunkGenerator.CODEC);
+        Registry.register(BuiltInRegistries.CHUNK_GENERATOR, identifierOf("structure_chunk_generator"), StructureChunkGenerator.CODEC);
         File structuresFolder = new File(configPath + File.separator + "structures");
         File configFile = new File(Mod.configPath + File.separator + MOD_ID + ".json");
 
@@ -83,7 +83,7 @@ public class Mod implements ModInitializer
                 for (File file : files) {
                     FileInputStream fileInputStream = new FileInputStream(file);
                     DataInputStream dataInputStream = new DataInputStream(fileInputStream);
-                    NbtCompound structure = NbtIo.readCompressed(dataInputStream);
+                    CompoundTag structure = NbtIo.readCompressed(dataInputStream);
                     STRUCTURES.put(file.getName().replace(".nbt", ""), structure);
                 }
                 LOGGER.info("Successfully loaded structures folder with " + STRUCTURES.size() + " structure.");

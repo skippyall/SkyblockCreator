@@ -1,9 +1,8 @@
 package io.github.null2264.skyblockcreator.core;
 
-import net.minecraft.util.math.BlockPos;
-
 import java.util.Arrays;
 import java.util.List;
+import net.minecraft.core.BlockPos;
 
 @SuppressWarnings({"FieldCanBeLocal", "FieldMayBeFinal"})
 public class ModConfig

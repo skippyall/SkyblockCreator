@@ -4,8 +4,8 @@ import lv.cebbys.mcmods.respro.api.initializer.worldgen.WorldPresetsResourceInit
 import lv.cebbys.mcmods.respro.component.mapper.JsonPart;
 import lv.cebbys.mcmods.respro.component.resource.AbstractJsonObjectResource;
 import lv.cebbys.mcmods.respro.exception.ResourceValidationException;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -15,16 +15,16 @@ public class WorldPresetsResource extends AbstractJsonObjectResource implements 
     @JsonPart("replace")
     protected Boolean dimensions = false;
     @JsonPart("values")
-    protected ArrayList<Identifier> worldPreset = new ArrayList<>();
+    protected ArrayList<ResourceLocation> worldPreset = new ArrayList<>();
 
-    public @NotNull WorldPresetsResourceInitializer addWorldPreset(Identifier worldPresetId) {
+    public @NotNull WorldPresetsResourceInitializer addWorldPreset(ResourceLocation worldPresetId) {
         worldPreset.add(worldPresetId);
         return this;
     }
 
     @Override
-    public boolean belongsTo(@NotNull("Provided ResourceType is null") ResourceType type) {
-        return ResourceType.SERVER_DATA.equals(type);
+    public boolean belongsTo(@NotNull("Provided ResourceType is null") PackType type) {
+        return PackType.SERVER_DATA.equals(type);
     }
 
     @Override

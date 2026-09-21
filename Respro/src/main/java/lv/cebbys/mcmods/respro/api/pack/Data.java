@@ -1,25 +1,25 @@
 package lv.cebbys.mcmods.respro.api.pack;
 
 import lv.cebbys.mcmods.respro.component.resource.pack.profile.PackProfileResource;
-import net.minecraft.resource.ResourcePackCompatibility;
-import net.minecraft.resource.ResourcePackProfile;
-import net.minecraft.resource.ResourcePackSource;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.repository.Pack;
+import net.minecraft.server.packs.repository.PackCompatibility;
+import net.minecraft.server.packs.repository.PackSource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-public class Data extends ResourcePackProfile
+public class Data extends Pack
 {
-    Identifier location;
+    ResourceLocation location;
 
-    public Data(@NotNull Identifier packLocation, @NotNull PackProfileResource packProfile, @NotNull ResourcePackProfile.PackFactory supplier) {
-        super(packLocation.toString(), packProfile.isAlwaysEnabled(), supplier, Text.literal(packProfile.getName().getAsString()), Objects.requireNonNull(loadMetadata(packLocation.toString(), supplier)), ResourcePackCompatibility.from(packProfile.getMeta().getFormat(), ResourceType.SERVER_DATA), packProfile.getPosition(), packProfile.isPinned(), ResourcePackSource.create((name) -> {
-            Text text = Text.literal(packProfile.getSource().getAsString());
-            return Text.translatable("pack.nameAndSource", name, text).formatted(Formatting.GRAY);
+    public Data(@NotNull ResourceLocation packLocation, @NotNull PackProfileResource packProfile, @NotNull Pack.ResourcesSupplier supplier) {
+        super(packLocation.toString(), packProfile.isAlwaysEnabled(), supplier, Component.literal(packProfile.getName().getAsString()), Objects.requireNonNull(readPackInfo(packLocation.toString(), supplier)), PackCompatibility.forFormat(packProfile.getMeta().getFormat(), PackType.SERVER_DATA), packProfile.getPosition(), packProfile.isPinned(), PackSource.create((name) -> {
+            Component text = Component.literal(packProfile.getSource().getAsString());
+            return Component.translatable("pack.nameAndSource", name, text).withStyle(ChatFormatting.GRAY);
         }, true));
         location = packLocation;
     }

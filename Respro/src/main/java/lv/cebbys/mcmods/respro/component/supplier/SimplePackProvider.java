@@ -3,14 +3,14 @@ package lv.cebbys.mcmods.respro.component.supplier;
 import lv.cebbys.mcmods.respro.api.pack.Data;
 import lv.cebbys.mcmods.respro.component.resource.pack.ResproResourcePack;
 import lv.cebbys.mcmods.respro.utility.IdentifierUtils;
-import net.minecraft.resource.ResourcePackProfile;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.repository.Pack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class SimplePackProvider<T extends ResourcePackProfile>
+public class SimplePackProvider<T extends Pack>
 {
     private final Supplier<ResproResourcePack<?, ?>> packResources;
     private final Function<ResproResourcePack<?, ?>, Data> packCreator;
@@ -20,7 +20,7 @@ public class SimplePackProvider<T extends ResourcePackProfile>
         this.packCreator = packCreator;
     }
 
-    public @NotNull Identifier getId() {
+    public @NotNull ResourceLocation getId() {
         return IdentifierUtils.suffix(packResources.get().getId(), "_supplier");
     }
 

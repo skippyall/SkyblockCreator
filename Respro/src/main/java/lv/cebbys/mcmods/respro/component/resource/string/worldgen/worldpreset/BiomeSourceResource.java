@@ -6,48 +6,48 @@ import lv.cebbys.mcmods.respro.component.mapper.JsonPart;
 import lv.cebbys.mcmods.respro.component.resource.AbstractJsonObjectResource;
 import lv.cebbys.mcmods.respro.exception.ResourceValidationException;
 import lv.cebbys.mcmods.respro.utility.access.MultiNoiseBiomeSourcePresetAccess;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.biome.source.BiomeSource;
-import net.minecraft.world.biome.source.MultiNoiseBiomeSourceParameterList;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterList;
 import org.jetbrains.annotations.NotNull;
 
 public class BiomeSourceResource extends AbstractJsonObjectResource implements BiomeSourceResourceInitializer
 {
     @JsonPart("type")
-    protected Identifier type;
+    protected ResourceLocation type;
     @JsonPart("preset")
-    protected Identifier preset;
+    protected ResourceLocation preset;
     @JsonPart("biome")
-    protected Identifier biome;
+    protected ResourceLocation biome;
 
     @Override
-    public @NotNull BiomeSourceResourceInitializer setValues(Identifier type, Identifier preset) {
+    public @NotNull BiomeSourceResourceInitializer setValues(ResourceLocation type, ResourceLocation preset) {
         this.type = type;
         this.preset = preset;
         return this;
     }
 
     public @NotNull BiomeSourceResourceInitializer setFromCodec(Codec<? extends BiomeSource> biomeSourceCodec) {
-        this.type = Registries.BIOME_SOURCE.getKey(biomeSourceCodec).orElseThrow().getValue();
+        this.type = BuiltInRegistries.BIOME_SOURCE.getResourceKey(biomeSourceCodec).orElseThrow().location();
         return this;
     }
 
-    public @NotNull BiomeSourceResourceInitializer setFromCodec(Codec<? extends BiomeSource> biomeSourceCodec, Identifier biomeId) {
+    public @NotNull BiomeSourceResourceInitializer setFromCodec(Codec<? extends BiomeSource> biomeSourceCodec, ResourceLocation biomeId) {
         this.biome = biomeId;
         return setFromCodec(biomeSourceCodec);
     }
 
-    public @NotNull BiomeSourceResourceInitializer setFromCodec(Codec<? extends BiomeSource> biomeSourceCodec, RegistryKey<MultiNoiseBiomeSourceParameterList> preset) {
-        this.preset = preset.getValue();
+    public @NotNull BiomeSourceResourceInitializer setFromCodec(Codec<? extends BiomeSource> biomeSourceCodec, ResourceKey<MultiNoiseBiomeSourceParameterList> preset) {
+        this.preset = preset.location();
         return setFromCodec(biomeSourceCodec);
     }
 
     @Override
-    public boolean belongsTo(@NotNull("Provided ResourceType is null") ResourceType type) {
-        return ResourceType.SERVER_DATA.equals(type);
+    public boolean belongsTo(@NotNull("Provided ResourceType is null") PackType type) {
+        return PackType.SERVER_DATA.equals(type);
     }
 
     @Override

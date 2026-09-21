@@ -1,27 +1,27 @@
 package io.github.null2264.skyblockcreator.mixin;
 
 import io.github.null2264.skyblockcreator.command.StructureWorldState;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(ServerPlayerEntity.class)
+@Mixin(ServerPlayer.class)
 public class PlayerEntityMixin
 {
 
-    @Inject(method = "moveToSpawn", at = @At("TAIL"))
-    private void doSpawn(ServerWorld world, CallbackInfo ci) {
+    @Inject(method = "fudgeSpawnLocation", at = @At("TAIL"))
+    private void doSpawn(ServerLevel world, CallbackInfo ci) {
         if (StructureWorldState.isNotStructureWorld(world)) {
             return;
         }
 
-        StructureWorldState structureWorldState = world.getPersistentStateManager().getOrCreate(StructureWorldState::createFromNbt, StructureWorldState::new, "structureIslands");
-        ServerPlayerEntity player = (ServerPlayerEntity) (Object) this;
+        StructureWorldState structureWorldState = world.getDataStorage().computeIfAbsent(StructureWorldState::createFromNbt, StructureWorldState::new, "structureIslands");
+        ServerPlayer player = (ServerPlayer) (Object) this;
         try {
-            structureWorldState.teleportToIsland(world, player, player.getUuid(), true);
+            structureWorldState.teleportToIsland(world, player, player.getUUID(), true);
         } catch (Exception ignored) {
         }
     }
