@@ -18,5 +18,3 @@ pluginManagement {
 }
 
 rootProject.name = "SkyblockCreator"
-
-include("Respro")

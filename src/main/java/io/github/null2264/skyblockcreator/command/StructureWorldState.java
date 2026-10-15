@@ -1,28 +1,38 @@
 package io.github.null2264.skyblockcreator.command;
 
 import io.github.null2264.skyblockcreator.Mod;
+import io.github.null2264.skyblockcreator.data.ModConfig;
+import io.github.null2264.skyblockcreator.data.StructureConfig;
 import io.github.null2264.skyblockcreator.error.AlreadyHaveIsland;
 import io.github.null2264.skyblockcreator.error.InvalidChunkGenerator;
 import io.github.null2264.skyblockcreator.error.NoIslandFound;
-import io.github.null2264.skyblockcreator.worldgen.StructureChunkGenerator;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.UUID;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderGetter;
+import net.minecraft.core.Vec3i;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.presets.WorldPreset;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.storage.LevelStorageSource;
+import org.jetbrains.annotations.Nullable;
 
 public class StructureWorldState extends SavedData
 {
-
+    private @Nullable ResourceLocation preset;
     private final HashMap<UUID, BlockPos> playerMap = new HashMap<>();
     private int x, y, dx, dy;
     private boolean spawnGenerated;
@@ -37,6 +47,9 @@ public class StructureWorldState extends SavedData
 
     public static StructureWorldState createFromNbt(CompoundTag tag) {
         StructureWorldState state = new StructureWorldState();
+        if(tag.contains("preset")) {
+            state.preset = ResourceLocation.tryParse(tag.getString("preset"));
+        }
         state.playerMap.clear();
         CompoundTag playerMapTag = tag.getCompound("playerMap");
         playerMapTag.getAllKeys().forEach(key -> {
@@ -55,12 +68,26 @@ public class StructureWorldState extends SavedData
         return state;
     }
 
-    public static boolean isNotStructureWorld(ServerLevel world) {
-        return !(world.getChunkSource().getGenerator() instanceof StructureChunkGenerator);
+    public static void createInitial(LevelStorageSource.LevelStorageAccess storageAccess, ResourceKey<WorldPreset> preset) {
+        Path structureWorldStatePath = storageAccess.getDimensionPath(ServerLevel.OVERWORLD).resolve("data/structureIslands.dat");
+
+        try {
+            Files.createDirectories(structureWorldStatePath.getParent());
+        } catch (IOException e) {
+            Mod.LOGGER.error("Could not create data directory", e);
+        }
+        StructureWorldState state = new StructureWorldState();
+        state.preset = preset.location();
+        state.setDirty();
+        state.save(structureWorldStatePath.toFile());
+    }
+
+    public boolean isNotStructureWorld() {
+        return !Mod.CONFIG.getStructureWorldConfigMap().containsKey(preset);
     }
 
     public void createIsland(ServerLevel world, ServerPlayer playerEntity) throws InvalidChunkGenerator, AlreadyHaveIsland {
-        if (isNotStructureWorld(world)) {
+        if (isNotStructureWorld()) {
             throw new InvalidChunkGenerator();
         }
         BlockPos islandPos = this.getIsland(playerEntity);
@@ -76,7 +103,7 @@ public class StructureWorldState extends SavedData
     }
 
     public void deleteIsland(ServerLevel world, ServerPlayer playerEntity) throws InvalidChunkGenerator, NoIslandFound {
-        if (isNotStructureWorld(world)) {
+        if (isNotStructureWorld()) {
             throw new InvalidChunkGenerator();
         }
         BlockPos islandPos = this.getIsland(playerEntity);
@@ -115,12 +142,13 @@ public class StructureWorldState extends SavedData
         int dx = this.dx;
         int dy = this.dy;
         if (!playerMap.containsKey(uuid)) {
-            ChunkGenerator chunkGenerator = world.getChunkSource().getGenerator();
-            if (chunkGenerator instanceof StructureChunkGenerator structureChunkGenerator) {
+            ModConfig.StructureWorldConfig optionalConfig = Mod.CONFIG.getStructureWorldConfigMap().get(preset);
+            if (optionalConfig != null) {
+                StructureConfig config = optionalConfig.getStructureConfig();
                 HolderGetter<Block> blockLookup = world.registryAccess().registryOrThrow(Registries.BLOCK).asLookup();
-                CompoundTag structureTemplateNbt = Mod.STRUCTURES.get(structureChunkGenerator.getStructure());
-                BlockPos playerSpawnOffset = structureChunkGenerator.getPlayerSpawnOffset();
-                BlockPos structureOffset = structureChunkGenerator.getStructureOffset();
+                CompoundTag structureTemplateNbt = Mod.STRUCTURES.get(config.getStructure());
+                Vec3i playerSpawnOffset = config.getPlayerSpawnOffset();
+                Vec3i structureOffset = config.getStructureOffset();
 
                 BlockPos origin = new BlockPos(8, 64, 8);
                 BlockPos island;
@@ -143,8 +171,6 @@ public class StructureWorldState extends SavedData
                     structureTemplate.placeInWorld(world, island.offset(structureOffset), island.offset(structureOffset), new StructurePlaceSettings(), world.random, Block.UPDATE_ALL);
                 }
                 playerMap.put(uuid, island.offset(playerSpawnOffset));
-            } else {
-                playerMap.put(uuid, BlockPos.ZERO);
             }
             setDirty();
         }
@@ -164,7 +190,7 @@ public class StructureWorldState extends SavedData
     }
 
     public void teleportToIsland(ServerLevel world, ServerPlayer player, UUID uuid, Boolean forceTeleport) throws InvalidChunkGenerator, NoIslandFound {
-        if (isNotStructureWorld(world) && !uuid.equals(Util.NIL_UUID)) {
+        if (isNotStructureWorld() && !uuid.equals(Util.NIL_UUID)) {
             throw new InvalidChunkGenerator();
         }
         BlockPos islandPos = this.getIsland(uuid);
@@ -183,6 +209,9 @@ public class StructureWorldState extends SavedData
     @Override
     public CompoundTag save(CompoundTag tag) {
         CompoundTag playerMapTag = new CompoundTag();
+        if(preset != null) {
+            tag.putString("preset", preset.toString());
+        }
         playerMap.forEach((uuid, blockPos) -> playerMapTag.putLong(uuid.toString(), blockPos.asLong()));
         tag.put("playerMap", playerMapTag);
         tag.putInt("x", x);

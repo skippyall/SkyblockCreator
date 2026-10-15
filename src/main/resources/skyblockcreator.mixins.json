@@ -4,13 +4,19 @@
   "package": "io.github.null2264.skyblockcreator.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "PlayerEntityMixin"
+    "FlatLevelGeneratorSettingsMixin",
+    "FlatLevelSourceMixin",
+    "RegistryDataLoaderMixin",
+    "ServerPlayerMixin",
+    "WorldPresetAccessor"
   ],
   "client": [
-    "MoreOptionsMixin"
+    "CreateWorldScreenMixin",
+    "WorldCreationUiStateMixin"
   ],
   "server": [
-    "ServerPropertiesMixin"
+    "DedicatedServerPropertiesMixin",
+    "MainMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -24,9 +24,6 @@
   "entrypoints": {
     "main": [
       "io.github.null2264.skyblockcreator.Mod"
-    ],
-    "server": [
-      "io.github.null2264.skyblockcreator.core.ModServer"
     ]
   },
   "mixins": [

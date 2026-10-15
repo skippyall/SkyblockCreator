@@ -3,6 +3,7 @@ package io.github.null2264.skyblockcreator.worldgen;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -13,7 +14,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.world.level.LevelHeightAccessor;
@@ -35,42 +35,29 @@ import net.minecraft.world.level.levelgen.structure.Structure;
 
 public class StructureChunkGenerator extends ChunkGenerator
 {
-    public static final Codec<StructureChunkGenerator> CODEC = RecordCodecBuilder.create((instance) -> instance.group(Codec.STRING.stable().fieldOf("dimension").forGetter((generator) -> generator.dimension), BiomeSource.CODEC.fieldOf("biome_source").forGetter((generator) -> generator.biomeSource), Codec.STRING.stable().fieldOf("structure").forGetter((generator) -> generator.structure), BlockPos.CODEC.fieldOf("structureOffset").forGetter((generator) -> generator.structureOffset), BlockPos.CODEC.fieldOf("playerSpawnOffset").forGetter((generator) -> generator.playerSpawnOffset), ResourceLocation.CODEC.optionalFieldOf("fillmentBlock", ResourceLocation.tryBuild("minecraft", "air")).stable().forGetter((generator) -> generator.fillmentBlock), Codec.BOOL.optionalFieldOf("enableTopBedrock", false).stable().forGetter((generator) -> generator.enableTopBedrock), Codec.BOOL.optionalFieldOf("enableBottomBedrock", false).stable().forGetter((generator) -> generator.enableBottomBedrock), Codec.BOOL.optionalFieldOf("isBedrockFlat", false).stable().forGetter((generator) -> generator.isBedrockFlat)).apply(instance, instance.stable(StructureChunkGenerator::new)));
-    private final String structure;
-    private final BlockPos structureOffset;
-    private final BlockPos playerSpawnOffset;
-    private final ResourceLocation fillmentBlock;
+    public static final Codec<StructureChunkGenerator> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
+            BiomeSource.CODEC.fieldOf("biome_source").forGetter((generator) -> generator.biomeSource),
+            BuiltInRegistries.BLOCK.byNameCodec().optionalFieldOf("fillmentBlock", Blocks.AIR).stable().forGetter((generator) -> generator.fillmentBlock),
+            Codec.BOOL.optionalFieldOf("enableTopBedrock", false).stable().forGetter((generator) -> generator.enableTopBedrock),
+            Codec.BOOL.optionalFieldOf("enableBottomBedrock", false).stable().forGetter((generator) -> generator.enableBottomBedrock),
+            Codec.BOOL.optionalFieldOf("isBedrockFlat", false).stable().forGetter((generator) -> generator.isBedrockFlat)
+    ).apply(instance, instance.stable(StructureChunkGenerator::new)));
+
+    private final Block fillmentBlock;
     private final boolean enableTopBedrock;
     private final boolean enableBottomBedrock;
     private final boolean isBedrockFlat;
-    private final String dimension;
 
-    public StructureChunkGenerator(String dimension, BiomeSource biomeSource, String structure, BlockPos structureOffset, BlockPos playerSpawnOffset, ResourceLocation fillmentBlock, boolean enableTopBedrock, boolean enableBottomBedrock, boolean isBedrockFlat) {
+    public StructureChunkGenerator(BiomeSource biomeSource, Block fillmentBlock, boolean enableTopBedrock, boolean enableBottomBedrock, boolean isBedrockFlat) {
         super(biomeSource);
-        this.structure = structure;
-        this.structureOffset = structureOffset;
-        this.playerSpawnOffset = playerSpawnOffset;
         this.fillmentBlock = fillmentBlock;
         this.enableTopBedrock = enableTopBedrock;
         this.enableBottomBedrock = enableBottomBedrock;
         this.isBedrockFlat = isBedrockFlat;
-        this.dimension = dimension;
     }
 
     public BlockState getFillmentBlock() {
-        return BuiltInRegistries.BLOCK.get(fillmentBlock).defaultBlockState();
-    }
-
-    public String getStructure() {
-        return structure;
-    }
-
-    public BlockPos getStructureOffset() {
-        return structureOffset;
-    }
-
-    public BlockPos getPlayerSpawnOffset() {
-        return playerSpawnOffset;
+        return fillmentBlock.defaultBlockState();
     }
 
     @Override

@@ -1,3 +1,6 @@
 accessWidener v2 named
 
 accessible method net/minecraft/client/gui/screens/worldselection/WorldCreationUiState getNonEmptyList (Lnet/minecraft/core/Registry;Lnet/minecraft/tags/TagKey;)Ljava/util/Optional;
+accessible class net/minecraft/server/dedicated/DedicatedServerProperties$WorldDimensionData
+accessible field net/minecraft/server/dedicated/DedicatedServerProperties worldDimensionData Lnet/minecraft/server/dedicated/DedicatedServerProperties$WorldDimensionData;
+accessible field net/minecraft/server/dedicated/DedicatedServerProperties$WorldDimensionData LEGACY_PRESET_NAMES Ljava/util/Map;

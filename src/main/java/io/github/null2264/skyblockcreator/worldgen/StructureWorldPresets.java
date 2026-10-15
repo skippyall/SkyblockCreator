@@ -1,85 +1,77 @@
 package io.github.null2264.skyblockcreator.worldgen;
 
+import com.mojang.serialization.Lifecycle;
 import io.github.null2264.skyblockcreator.Mod;
-import lv.cebbys.mcmods.respro.api.ResproRegistry;
-import lv.cebbys.mcmods.respro.constant.ResproConstants;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.SharedConstants;
+import io.github.null2264.skyblockcreator.data.ModConfig;
+import io.github.null2264.skyblockcreator.mixin.WorldPresetAccessor;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderGetter;
+import net.minecraft.core.Registry;
+import net.minecraft.core.WritableRegistry;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.FixedBiomeSource;
-import net.minecraft.world.level.biome.MultiNoiseBiomeSource;
-import net.minecraft.world.level.biome.MultiNoiseBiomeSourceParameterLists;
-import net.minecraft.world.level.biome.TheEndBiomeSource;
-import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
-import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
-import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
+import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.levelgen.presets.WorldPreset;
-import java.util.ArrayList;
+import net.minecraft.world.level.levelgen.presets.WorldPresets;
+import org.jetbrains.annotations.Nullable;
 
-import static io.github.null2264.skyblockcreator.Mod.identifierOf;
+import java.util.HashMap;
+import java.util.Map;
 
-public class StructureWorldPresets
-{
-    private static final ArrayList<ResourceKey<WorldPreset>> toBeDisplayed = new ArrayList<>();
+public class StructureWorldPresets {
+    public static <T> void registerDynamic(ResourceKey<? extends Registry<T>> resourceKey, WritableRegistry<T> registry, RegistryOps.RegistryInfoLookup lookup) {
+        if(resourceKey.location().equals(Registries.WORLD_PRESET.location())) {
+            //noinspection unchecked
+            WritableRegistry<WorldPreset> presets = ((WritableRegistry<WorldPreset>) registry);
+            WorldPreset normalVanilla = presets.get(WorldPresets.NORMAL);
 
-    public static void register() {
-        ResproRegistry.registerData(data -> {
-            data.setDumpMode(FabricLoader.getInstance().isDevelopmentEnvironment());
-            data.setPackId(Mod.identifierOf("datapack"));
-            data.setPackProfile(profile -> {
-                profile.setAlwaysEnabled(true);
-                profile.setPackName(name -> name.setText("SkyblockCreator Internal Data"));
-                profile.setPackIcon(icon -> icon.setFromResources(Mod.class, "assets/skyblockcreator/icon.png"));
-                profile.setPackMeta(meta -> {
-                    meta.setDescription("SkyblockCreator's Internal Datapack");
-                    meta.setFormat(ResproConstants.PACK_FORMAT);
-                });
-            });
-            Mod.CONFIG.getStructureWorldConfigs().forEach(config -> {
-                String structure = config.getStructureIdentifier();
-                ResourceLocation worldPresetId = Mod.identifierOf(structure);
-                data.setWorldPreset(worldPresetId, worldPreset -> {
-                    worldPreset.setDimensions(dim -> {
-                        dim.setFromRegistry(BuiltinDimensionTypes.OVERWORLD);
-                        dim.setChunkGenerator(chunkGenerator -> {
-                            chunkGenerator.setFromCodec(StructureChunkGenerator.CODEC);
-                            chunkGenerator.setStructureChunkValues(config.getPlayerSpawnOffset(), config.getStructureOffset(), structure, new ResourceLocation(config.getFillmentBlockIdentifier()), config.isTopBedrockEnabled(), config.isBottomBedrockEnabled(), config.isBedrockFlat());
-                            chunkGenerator.setBiomeSource(biomeSource -> biomeSource.setFromCodec(FixedBiomeSource.CODEC, new ResourceLocation(config.getBiomeIdentifier())));
-                        });
-                    });
+            for(ModConfig.StructureWorldConfig config : Mod.CONFIG.getStructureWorldConfigs()) {
+                ResourceKey<WorldPreset> presetKey = ResourceKey.create(Registries.WORLD_PRESET, config.getPresetId());
+                try {
+                    WorldPreset preset = createPreset(config, lookup, normalVanilla);
+                    if(preset != null) {
+                        presets.register(presetKey, preset, Lifecycle.stable());
+                    }
+                } catch (Exception e) {
+                    Mod.LOGGER.error("Could not inject preset {}", presetKey.location(), e);
+                }
+            }
+        }
+    }
 
-                    worldPreset.setDimensions(dim -> {
-                        dim.setFromRegistry(BuiltinDimensionTypes.NETHER);
-                        dim.setChunkGenerator(chunkGenerator -> {
-                            if (config.getTheNetherConfig().isVoidMode()) {
-                                chunkGenerator.setFromCodec(StructureChunkGenerator.CODEC);
-                                chunkGenerator.setStructureChunkValues(config.getPlayerSpawnOffset(), config.getStructureOffset(), structure, ResourceLocation.tryBuild("minecraft", "air"), config.isTopBedrockEnabled(), config.isBottomBedrockEnabled(), config.isBedrockFlat());
-                            } else {
-                                chunkGenerator.setFromCodec(NoiseBasedChunkGenerator.CODEC, NoiseGeneratorSettings.NETHER);
-                            }
-                            chunkGenerator.setBiomeSource(biomeSource -> biomeSource.setFromCodec(MultiNoiseBiomeSource.CODEC, MultiNoiseBiomeSourceParameterLists.NETHER));
-                        });
-                    });
+    public static @Nullable WorldPreset createPreset(ModConfig.StructureWorldConfig config, RegistryOps.RegistryInfoLookup lookup, @Nullable WorldPreset normalVanilla) {
+        if(config.getDimensionConfigs().isEmpty()) {
+            return null;
+        }
 
-                    worldPreset.setDimensions(dim -> {
-                        dim.setFromRegistry(BuiltinDimensionTypes.END);
-                        dim.setChunkGenerator(chunkGenerator -> {
-                            if (config.getTheEndConfig().isVoidMode()) {
-                                chunkGenerator.setFromCodec(StructureChunkGenerator.CODEC);
-                                chunkGenerator.setStructureChunkValues(config.getPlayerSpawnOffset(), config.getStructureOffset(), structure, ResourceLocation.tryBuild("minecraft", "air"), config.isTopBedrockEnabled(), config.isBottomBedrockEnabled(), config.isBedrockFlat());
-                            } else {
-                                chunkGenerator.setFromCodec(NoiseBasedChunkGenerator.CODEC, NoiseGeneratorSettings.END);
-                            }
-                            chunkGenerator.setBiomeSource(biomeSource -> biomeSource.setFromCodec(TheEndBiomeSource.CODEC));
-                        });
-                    });
-                });
-                toBeDisplayed.add(Mod.registryKeyOf(structure));
-                if (config.isOverridingDefault()) Mod.OVERRIDED_LEVEL_TYPE = worldPresetId.getPath();
-                Mod.LOGGER.info("Successfully registered " + structure + " world type.");
-            });
-            Mod.TO_BE_DISPLAYED = toBeDisplayed;
+        HolderGetter<DimensionType> dimensionTypes = lookup.lookup(Registries.DIMENSION_TYPE).orElseThrow().getter();
+        HolderGetter<Biome> biomes = lookup.lookup(Registries.BIOME).orElseThrow().getter();
+        Map<ResourceKey<LevelStem>, LevelStem> dimensions = new HashMap<>();
+
+        config.getDimensionConfigs().forEach((dimension, dimensionConfig) -> {
+            Holder<DimensionType> dimensionType = dimensionTypes.getOrThrow(dimensionConfig.getDimensionType());
+            StructureChunkGenerator chunkGenerator = new StructureChunkGenerator(
+                    new FixedBiomeSource(biomes.getOrThrow(dimensionConfig.getBiomeIdentifier())),
+                    dimensionConfig.getFillmentBlock(),
+                    dimensionConfig.isTopBedrockEnabled(),
+                    dimensionConfig.isBottomBedrockEnabled(),
+                    dimensionConfig.isBedrockFlat()
+            );
+
+            dimensions.put(dimension, new LevelStem(dimensionType, chunkGenerator));
         });
+
+
+        if(normalVanilla != null) {
+            //Add default vanilla dimensions not mentioned in the config
+            //Should we somehow copy the LevelStem?
+            ((WorldPresetAccessor) normalVanilla).getDimensions().forEach(dimensions::putIfAbsent);
+        }
+
+        return new WorldPreset(dimensions);
     }
 }
