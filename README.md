@@ -1,3 +1,4 @@
+# Migrated to [https://codeberg.org/skippyall/SkyblockCreator](https://codeberg.org/skippyall/SkyblockCreator)
 <p align="center"><img src="https://i.imgur.com/NiqXaW2.png" width="250" height="250"></p>
 <h3 align="center">Skyblock Creator</h3>
 
